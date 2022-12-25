@@ -1,5 +1,17 @@
 #drawing {
-  width: 1000px;
-  height: 800px;
   background-color: #eee;
+  flex-grow: 1;
 }
+
+.contain {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+
+.options {
+  width: 300px;
+  padding: 10px;
+  background-color: #fff;
+}
+
