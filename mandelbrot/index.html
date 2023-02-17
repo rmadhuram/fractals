@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <button id="zoom-out">Zoom Out</button>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const MAX_ITERATIONS = 100;
+    const ZOOM_FACTOR = 1.5;
+    let zoom = 1;
+    let centerX = -0.5;
+    let centerY = 0;
+
+    function Complex(real, imag) {
+      this.real = real;
+      this.imag = imag;
+    }
+
+    Complex.prototype.abs = function() {
+      return Math.sqrt(this.real * this.real + this.imag * this.imag);
+    };
+
+    Complex.prototype.times = function(other) {
+      const real = this.real * other.real - this.imag * other.imag;
+      const imag = this.real * other.imag + this.imag * other.real;
+      return new Complex(real, imag);
+    };
+
+    Complex.prototype.plus = function(other) {
+      const real = this.real + other.real;
+      const imag = this.imag + other.imag;
+      return new Complex(real, imag);
+    };
+
+    function mandelbrot(c) {
+      let z = new Complex(0, 0);
+      for (let i = 0; i < MAX_ITERATIONS; i++) {
+        z = z.times(z).plus(c);
+        if (z.abs() > 2) {
+          return i;
+        }
+      }
+      return MAX_ITERATIONS;
+    }
+
+    function drawMandelbrot() {
+      for (let x = 0; x < canvas.width; x++) {
+        for (let y = 0; y < canvas.height; y++) {
+          const real = centerX + (x - canvas.width / 2) / (canvas.width / 4 * zoom);
+          const imag = centerY + (y - canvas.height / 2) / (canvas.width / 4 * zoom) * -1;
+          const c = new Complex(real, imag);
+          const iterations = mandelbrot(c);
+          const color = iterations === MAX_ITERATIONS ? '#000' : `hsl(${(iterations * 10) % 360}, 80%, ${iterations}%)`;
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+
+    // Define the zoom out button element
+    const zoomOutButton = document.createElement('button');
+    zoomOutButton.textContent = 'Zoom Out';
+    zoomOutButton.addEventListener('click', zoomOut);
+
+    // Define the zoom out function
+    function zoomOut() {
+      // Decrease the zoom factor by a factor of 2
+      zoom /= 2;
+      // Recalculate the view bounds and redraw the Mandelbrot set
+      xMin = centerX - width / (2 * zoom);
+      xMax = centerX + width / (2 * zoom);
+      yMin = centerY - height / (2 * zoom);
+      yMax = centerY + height / (2 * zoom);
+      drawMandelbrot();
+    }
+
+    // Add the zoom out button to the document
+    document.body.appendChild(zoomOutButton);
+
+    canvas.addEventListener('click', (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      centerX += (x - canvas.width / 2) / (canvas.width / 4 * zoom);
+      centerY += (y - canvas.height / 2) / (canvas.width / 4 * zoom) * -1;
+      zoom *= ZOOM_FACTOR;
+      drawMandelbrot();
+    });
+
+    drawMandelbrot();
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      drawMandelbrot();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+  </script>
+</body>
+</html>
+
